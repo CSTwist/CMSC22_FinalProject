@@ -1,0 +1,63 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "GameMenuApp",
+            "request": "launch",
+            "mainClass": "GameMenuApp",
+            "projectName": "Final Project_f83b052a"
+        },
+        {
+            "type": "java",
+            "name": "AZTANK",
+            "request": "launch",
+            "mainClass": "AZTANK",
+            "projectName": "Final Project_f83b052a"
+        },
+        {
+            "type": "java",
+            "name": "MainMenu",
+            "request": "launch",
+            "mainClass": "MainMenu",
+            "projectName": "Final Project_f83b052a"
+        },
+        {
+            "type": "java",
+            "name": "MainMenuApp",
+            "request": "launch",
+            "mainClass": "MainMenuApp",
+            "projectName": "Final Project_f83b052a"
+        },
+        {
+            "type": "java",
+            "name": "Test",
+            "request": "launch",
+            "mainClass": "Test",
+            "projectName": "Final Project_f83b052a"
+        },
+        {
+            "type": "java",
+            "name": "DodgeGame",
+            "request": "launch",
+            "mainClass": "DodgeGame",
+            "projectName": "Final Project_f83b052a",
+            "vmArgs": "--module-path \"${workspaceFolder}/lib/javafx-sdk-23.0.1/lib\" --add-modules javafx.controls,javafx.fxml",
+            "classPaths": [
+                "${workspaceFolder}/bin",
+                "${workspaceFolder}/lib/fxgl-21.1-uber.jar"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "Launch JavaFX",
+            "request": "launch",
+            "mainClass": "Main",
+            "vmArgs": "--module-path \"${workspaceFolder}/lib/javafx-sdk-23.0.1/lib\" --add-modules javafx.controls,javafx.fxml",
+            "classPaths": [
+                "${workspaceFolder}/bin",
+                "${workspaceFolder}/lib/fxgl-21.1-uber.jar"
+            ]
+        }
+    ]
+}

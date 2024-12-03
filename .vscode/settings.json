@@ -1,0 +1,7 @@
+{
+    "java.project.outputPath": "bin",
+    "java.compile.nullAnalysis.enable": false,
+    "java.project.referencedLibraries": [
+        "lib/fxgl-21.1-uber.jar"
+    ]
+}
