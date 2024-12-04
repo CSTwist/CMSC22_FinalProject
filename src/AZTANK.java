@@ -1,6 +1,7 @@
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.app.scene.*;
+import com.almasb.fxgl.core.math.Vec2;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
@@ -8,7 +9,11 @@ import com.almasb.fxgl.entity.Spawns;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.components.CollidableComponent;
 import com.almasb.fxgl.input.UserAction;
+import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.CollisionHandler;
+import com.almasb.fxgl.physics.HitBox;
+import com.almasb.fxgl.physics.PhysicsComponent;
+import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
 import com.almasb.fxgl.time.Timer;
 import com.almasb.fxgl.time.TimerAction;
 
@@ -235,6 +240,35 @@ public class AZTANK extends GameApplication {
                 .type(EntityType.PLAYER)
                 .buildAndAttach();
 
+                // Create boundary walls
+        Entity topWall = FXGL.entityBuilder()
+            .at(0, -10) // slightly off-screen
+            .bbox(new HitBox(BoundingShape.box(FXGL.getAppWidth(), 10)))
+            .with(new CollidableComponent(true))
+            .type(EntityType.WALLTYPE)
+            .buildAndAttach();
+
+        Entity bottomWall = FXGL.entityBuilder()
+            .at(0, FXGL.getAppHeight())
+            .bbox(new HitBox(BoundingShape.box(FXGL.getAppWidth(), 10)))
+            .with(new CollidableComponent(true))
+            .type(EntityType.WALLTYPE)
+            .buildAndAttach();
+
+        Entity leftWall = FXGL.entityBuilder()
+            .at(-10, 0) // slightly off-screen
+            .bbox(new HitBox(BoundingShape.box(10, FXGL.getAppHeight())))
+            .with(new CollidableComponent(true))
+            .type(EntityType.WALLTYPE)
+            .buildAndAttach();
+
+        Entity rightWall = FXGL.entityBuilder()
+            .at(FXGL.getAppWidth(), 0)
+            .bbox(new HitBox(BoundingShape.box(10, FXGL.getAppHeight())))
+            .with(new CollidableComponent(true))
+            .type(EntityType.WALLTYPE)
+            .buildAndAttach();
+
         // Register factories
         FXGL.getGameWorld().addEntityFactory(new FallingObjectFactory());
     }
@@ -248,6 +282,18 @@ public class AZTANK extends GameApplication {
                 FXGL.showMessage("Skill Issue!", () -> {
                     FXGL.getGameController().gotoMainMenu();
                 });
+            }
+        });
+        FXGL.getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.PLAYER, EntityType.WALLTYPE) {
+            @Override
+            protected void onCollision(Entity player, Entity wallEntity) {
+                double playerX = player.getX();
+                double playerY = player.getY();
+
+                double newX = Math.max(0, Math.min(playerX, FXGL.getAppWidth() - player.getWidth()));
+                double newY = Math.max(0, Math.min(playerY, FXGL.getAppHeight() - player.getHeight()));
+
+                player.setPosition(newX, newY);
             }
         });
     }
@@ -288,7 +334,7 @@ public class AZTANK extends GameApplication {
 
     // Define entity types
     public enum EntityType {
-        PLAYER, BULLET
+        PLAYER, BULLET, WALLTYPE
     }
 
     // Define entity factory for spawning objects
