@@ -1,7 +1,6 @@
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.app.scene.*;
-import com.almasb.fxgl.core.math.Vec2;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
@@ -14,20 +13,18 @@ import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
-import com.almasb.fxgl.time.Timer;
 import com.almasb.fxgl.time.TimerAction;
-
 import javafx.geometry.Point2D;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.util.Duration; // Import the Duration class
 import com.almasb.fxgl.entity.EntityFactory;
-import java.util.Random;
+import java.lang.Math;
 
 public class AZTANK extends GameApplication {
-    
+    double player1deltaX, player1deltaY;
+    double player2deltaX, player2deltaY;
     private static Entity player1, player2;
     private AZTANKMainMenu myMainMenu;
 
@@ -81,6 +78,8 @@ public class AZTANK extends GameApplication {
                 // Calculate the translation vector
                 double deltaX = Math.cos(radians) * -5; // Move 10 units forward
                 double deltaY = Math.sin(radians) * -5;
+                player1deltaX = deltaX;
+                player1deltaY = deltaY;
     
                 // Apply the translation
                 player1.translate(new Point2D(deltaX, deltaY));
@@ -98,6 +97,8 @@ public class AZTANK extends GameApplication {
                 // Calculate the translation vector
                 double deltaX = Math.cos(radians) * 5; // Move 10 units Backwards
                 double deltaY = Math.sin(radians) * 5;
+                player1deltaX = deltaX;
+                player1deltaY = deltaY;
     
                 // Apply the translation
                 player1.translate(new Point2D(deltaX, deltaY));
@@ -164,23 +165,26 @@ public class AZTANK extends GameApplication {
                 // Calculate the translation vector
                 double deltaX = Math.cos(radians) * -5; // Move 10 units forward
                 double deltaY = Math.sin(radians) * -5;
+                player2deltaX = deltaX;
+                player2deltaY = deltaY;
     
                 // Apply the translation
                 player2.translate(new Point2D(deltaX, deltaY));
             }
         }, KeyCode.W);
-
+        
         FXGL.getInput().addAction(new UserAction("Player 2 Move Down") {
             @Override
             protected void onAction() {
                 double angle = player2.getRotation();
-
                 // Convert the angle to radians
                 double radians = Math.toRadians(angle);
     
                 // Calculate the translation vector
                 double deltaX = Math.cos(radians) * 5; // Move 10 units forward
                 double deltaY = Math.sin(radians) * 5;
+                player2deltaX = deltaX;
+                player2deltaY = deltaY;
     
                 // Apply the translation
                 player2.translate(new Point2D(deltaX, deltaY));
@@ -230,6 +234,8 @@ public class AZTANK extends GameApplication {
                 .at(400, 550) // Starting position
                 .viewWithBBox(Player1Tank.tankInstantiator()) // Player appearance
                 .with(new CollidableComponent(true))
+                .bbox(new HitBox("Top", BoundingShape.box(50, 10)))  // Top HitBox
+                .bbox(new HitBox("Bottom", BoundingShape.box(50, 10)))  // Bottom HitBox
                 .type(EntityType.PLAYER)
                 .buildAndAttach();
 
@@ -237,40 +243,72 @@ public class AZTANK extends GameApplication {
                 .at(200, 550) // Starting position
                 .viewWithBBox(Player2Tank.tankInstantiator()) // Player appearance
                 .with(new CollidableComponent(true))
+                .bbox(new HitBox("Top", BoundingShape.box(50, 10)))  // Top HitBox
+                .bbox(new HitBox("Bottom", BoundingShape.box(50, 10)))  // Bottom HitBox
                 .type(EntityType.PLAYER)
                 .buildAndAttach();
 
-                // Create boundary walls
+        // Create boundary walls
+        borderSetter();
+
+        //Create Maze
+        maze();
+
+        // Register factories
+        FXGL.getGameWorld().addEntityFactory(new BulletObjectFactory());
+    }
+
+    protected void borderSetter(){
         Entity topWall = FXGL.entityBuilder()
             .at(0, -10) // slightly off-screen
             .bbox(new HitBox(BoundingShape.box(FXGL.getAppWidth(), 10)))
             .with(new CollidableComponent(true))
-            .type(EntityType.WALLTYPE)
+            .type(EntityType.BORDER)
             .buildAndAttach();
 
         Entity bottomWall = FXGL.entityBuilder()
             .at(0, FXGL.getAppHeight())
             .bbox(new HitBox(BoundingShape.box(FXGL.getAppWidth(), 10)))
             .with(new CollidableComponent(true))
-            .type(EntityType.WALLTYPE)
+            .type(EntityType.BORDER)
             .buildAndAttach();
 
         Entity leftWall = FXGL.entityBuilder()
             .at(-10, 0) // slightly off-screen
             .bbox(new HitBox(BoundingShape.box(10, FXGL.getAppHeight())))
             .with(new CollidableComponent(true))
-            .type(EntityType.WALLTYPE)
+            .type(EntityType.BORDER)
             .buildAndAttach();
 
         Entity rightWall = FXGL.entityBuilder()
             .at(FXGL.getAppWidth(), 0)
             .bbox(new HitBox(BoundingShape.box(10, FXGL.getAppHeight())))
             .with(new CollidableComponent(true))
-            .type(EntityType.WALLTYPE)
+            .type(EntityType.BORDER)
+            .buildAndAttach();
+    }
+
+    public void maze(){
+        Entity Wall1 = FXGL.entityBuilder()
+            .at(FXGL.getAppWidth()/2, FXGL.getAppHeight()/2)
+            .viewWithBBox(new Rectangle(150,5))
+            .with(new CollidableComponent(true))
+            .type(EntityType.WALL)
             .buildAndAttach();
 
-        // Register factories
-        FXGL.getGameWorld().addEntityFactory(new FallingObjectFactory());
+        Entity Wall2 = FXGL.entityBuilder()
+            .at(FXGL.getAppWidth()/2+250, FXGL.getAppHeight()/2)
+            .viewWithBBox(new Rectangle(5,150))
+            .with(new CollidableComponent(true))
+            .type(EntityType.WALL)
+            .buildAndAttach();
+
+        Entity Wall3 = FXGL.entityBuilder()
+            .at(FXGL.getAppWidth()/2-300, FXGL.getAppHeight()/2)
+            .viewWithBBox(new Rectangle(5,150))
+            .with(new CollidableComponent(true))
+            .type(EntityType.WALL)
+            .buildAndAttach();
     }
 
     @Override
@@ -284,9 +322,9 @@ public class AZTANK extends GameApplication {
                 });
             }
         });
-        FXGL.getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.PLAYER, EntityType.WALLTYPE) {
+        FXGL.getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.PLAYER, EntityType.BORDER) {
             @Override
-            protected void onCollision(Entity player, Entity wallEntity) {
+            protected void onCollision(Entity player, Entity borderEntity) {
                 double playerX = player.getX();
                 double playerY = player.getY();
 
@@ -294,6 +332,23 @@ public class AZTANK extends GameApplication {
                 double newY = Math.max(0, Math.min(playerY, FXGL.getAppHeight() - player.getHeight()));
 
                 player.setPosition(newX, newY);
+            }
+        });
+        
+        FXGL.getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.PLAYER, EntityType.WALL) {
+            @Override
+            protected void onCollision(Entity player, Entity wallEntity) {
+    
+                // Apply the translation
+                if (player == player1) player.translate(new Point2D(-player1deltaX, -player1deltaY));
+                if (player == player2) player.translate(new Point2D(-player2deltaX, -player2deltaY));
+            }
+        });
+
+        FXGL.getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.BULLET, EntityType.WALL) {
+            @Override
+            protected void onCollision(Entity bullet, Entity wallEntity) {
+                bullet.removeFromWorld();
             }
         });
     }
@@ -304,18 +359,19 @@ public class AZTANK extends GameApplication {
         var scoreText = FXGL.getUIFactoryService().newText("", 24);
         scoreText.setTranslateX(10);
         scoreText.setTranslateY(30);
+        scoreText.setFill(Color.BLACK);
 
         // Initialize score property if it does not exist
         try {
-            FXGL.geti("score");  // Try to get the score
+            FXGL.geti("Time");  // Try to get the score
         } catch (IllegalArgumentException e) {
-            FXGL.set("score", 0);  // Initialize score to 0 if it does not exist
+            FXGL.set("Time", 0);  // Initialize score to 0 if it does not exist
         }
 
         // Increment score and update the UI every second
         FXGL.getGameTimer().runAtInterval(() -> {
-            FXGL.inc("score", 1); // Increment score
-            scoreText.setText("Score: " + FXGL.geti("score"));
+            FXGL.inc("Time", 1); // Increment score
+            scoreText.setText("Time: " + FXGL.geti("Time"));
         }, Duration.seconds(1)); // Use Duration for time interval
 
         FXGL.addUINode(scoreText);
@@ -328,23 +384,19 @@ public class AZTANK extends GameApplication {
         FXGL.set("score", 0);  // Initialize score to 0 if it hasn't been set already
     }
 
-    private int randomX() {
-        return new Random().nextInt(800);
-    }
-
     // Define entity types
     public enum EntityType {
-        PLAYER, BULLET, WALLTYPE
+        PLAYER, BULLET, BORDER, WALL
     }
 
-    // Define entity factory for spawning objects
-    public static class FallingObjectFactory implements EntityFactory {
+    // Define entity factory for spawning bullet objects
+    public static class BulletObjectFactory implements EntityFactory {
 
         @Spawns("Player 1 bullet")
         public Entity newPlayer1BulletObject(SpawnData data) {
             Entity bulletObject = FXGL.entityBuilder(data)
                     .type(EntityType.BULLET)
-                    .viewWithBBox(new Circle(5, Color.RED)) // Falling object appearance
+                    .viewWithBBox(new Circle(5, Color.BLACK)) // Bullet object appearance
                     .with(new CollidableComponent(true))
                     .build();
 
@@ -358,11 +410,11 @@ public class AZTANK extends GameApplication {
         public Entity newPlayer2Object(SpawnData data) {
             Entity bulletObject = FXGL.entityBuilder(data)
                     .type(EntityType.BULLET)
-                    .viewWithBBox(new Circle(5, Color.RED)) // Falling object appearance
+                    .viewWithBBox(new Circle(5, Color.BLACK)) // Bullet object appearance
                     .with(new CollidableComponent(true))
                     .build();
 
-            // Add custom movement component to make it fall
+            // Add custom movement component
             bulletObject.addComponent(new Player2MovementComponent());
 
             return bulletObject;
@@ -375,7 +427,7 @@ public class AZTANK extends GameApplication {
 
         @Override
         public void onUpdate(double tpf) {
-            // Move downwards at the specified speed
+            // Move at the specified speed
 
                 // Convert the angle to radians
                 double radians = Math.toRadians(angle);
@@ -395,7 +447,7 @@ public class AZTANK extends GameApplication {
 
         @Override
         public void onUpdate(double tpf) {
-            // Move downwards at the specified speed
+            // Move at the specified speed
 
                 // Convert the angle to radians
                 double radians = Math.toRadians(angle);
